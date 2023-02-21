@@ -118,7 +118,6 @@ class protocol(object):
             forPrint += "\nP{} has {} ones. a * Not: {}".format(player.id, ones, ideal)
         return forPrint
 
-
 def new(NumPlayers, Nmaxones, PlayerInputSize, SecParam, bitLength, p, a, disableChecks, inputSet,keyWords):
         return protocol(NumPlayers, Nmaxones, PlayerInputSize, SecParam, bitLength, p, a, disableChecks, inputSet,keyWords)
         

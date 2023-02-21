@@ -4,13 +4,12 @@ import pandas as pd
 from sklearn.utils import shuffle
 import os
 import protocol
+import math
 import numpy as np
 import helpers
 import hashes as h
 import bloom_filter as bf
 import garbled_bloom_filter as gbf
-default = 0
-success =0
 
 def psi(PlayerInputSize,inputSet,keyWords):
     NumPlayers = 2
@@ -79,13 +78,7 @@ def psi(PlayerInputSize,inputSet,keyWords):
     # Intersections are recorded and output
     # print(Protocol.perform_Output())
     forPrint, intersections, output = Protocol.perform_Output()
-    if len(output)!=0:
-        global success
-        success+=1
-        print("命中")
-    else:
-        global default
-        default+=1
+    return output
     # print("\nStep finished\n")
 
 def rhex(temp_list):
@@ -98,13 +91,22 @@ def rhex(temp_list):
         result.append(r)
     return result
 
+
+
 if __name__ == '__main__':
-    slide_size=30
+    tn=0
+    tp=0
+    fn=0
+    fp=0
+    slide_size=20
     data = pd.read_csv('./dataset/traffic_result.csv')
     del data['Unnamed: 0']
     data = shuffle(data)
     init_benign = data.label.value_counts().benign
     init_malicious = data.label.value_counts().malicious
+    print("Creating slide size: {}".format(slide_size))
+    print("The num of benign traffic: {}".format(init_benign))
+    print("The num of malicious traffic: {}".format(init_malicious))
     kwds_list=[]
     kwds_list = pd.read_csv('./dataset/kwds.csv')
     del kwds_list['Unnamed: 0']
@@ -112,11 +114,21 @@ if __name__ == '__main__':
     kwds_list=kwds_list['kwds'].tolist()
     kwds_list=rhex(kwds_list)
     for index, row in data.iterrows():
-        print(row['label'])
-        temp_list = row['value'].split()
-        result=rhex(temp_list)
-        result_split=result[:30]
-        PlayerInputSize=len(result_split)
-        for i in range(int(len(kwds_list)/slide_size)):
-            psi(PlayerInputSize,result_split,kwds_list[i*slide_size:(i+1)*slide_size])
-
+        try:
+            temp_list = row['value'].split()
+            result=rhex(temp_list)
+            result_split=result[:10]
+            PlayerInputSize=len(result_split)
+            for i in range(int(math.floor(len(kwds_list)/slide_size))):
+                output=psi(PlayerInputSize,result_split,kwds_list[i*slide_size:(i+1)*slide_size])
+                if len(output)!=0 and row['label']=='benign':
+                    tn+=1
+                    continue
+                if len(output)==0 and row['label']=='malicious':
+                    fn+=1
+                    continue
+        except:
+            print("error")
+    print("The number of true positive: {} ".format(tn))
+    print(tn/init_benign)
+    # print(fp/init_malicious)
