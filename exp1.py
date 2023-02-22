@@ -1,5 +1,4 @@
 import binascii
-import binascii
 import pandas as pd
 from sklearn.utils import shuffle
 import os
@@ -91,14 +90,11 @@ def rhex(temp_list):
         result.append(r)
     return result
 
-
-
-if __name__ == '__main__':
+def main_exp1(slide_size):
     tn=0
     tp=0
     fn=0
     fp=0
-    slide_size=20
     data = pd.read_csv('./dataset/traffic_result.csv')
     del data['Unnamed: 0']
     data = shuffle(data)
@@ -117,18 +113,24 @@ if __name__ == '__main__':
         try:
             temp_list = row['value'].split()
             result=rhex(temp_list)
+            result = shuffle(result)
             result_split=result[:10]
             PlayerInputSize=len(result_split)
             for i in range(int(math.floor(len(kwds_list)/slide_size))):
                 output=psi(PlayerInputSize,result_split,kwds_list[i*slide_size:(i+1)*slide_size])
                 if len(output)!=0 and row['label']=='benign':
                     tn+=1
-                    continue
-                if len(output)==0 and row['label']=='malicious':
-                    fn+=1
+                    print("benign target")
                     continue
         except:
             print("error")
     print("The number of true positive: {} ".format(tn))
     print(tn/init_benign)
     # print(fp/init_malicious)
+    return tn/init_benign
+
+if __name__ == '__main__':
+    result_list=[]
+    for slide_size in range([15,20,25,30,35]):
+        result_list.append(main_exp1(slide_size))
+    print(result_list)
